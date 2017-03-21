@@ -1,13 +1,11 @@
 package com.wzgiceman.rxretrofitlibrary.retrofit_rx.http;
 
-import android.util.Log;
-
 import com.trello.rxlifecycle.android.ActivityEvent;
 import com.trello.rxlifecycle.components.support.RxAppCompatActivity;
 import com.wzgiceman.rxretrofitlibrary.retrofit_rx.Api.BaseApi;
-import com.wzgiceman.rxretrofitlibrary.retrofit_rx.exception.FactoryException;
-import com.wzgiceman.rxretrofitlibrary.retrofit_rx.exception.HttpTimeException;
 import com.wzgiceman.rxretrofitlibrary.retrofit_rx.exception.RetryWhenNetworkException;
+import com.wzgiceman.rxretrofitlibrary.retrofit_rx.http.func.ExceptionFunc;
+import com.wzgiceman.rxretrofitlibrary.retrofit_rx.http.func.TokeanFunc;
 import com.wzgiceman.rxretrofitlibrary.retrofit_rx.listener.HttpOnNextListener;
 import com.wzgiceman.rxretrofitlibrary.retrofit_rx.listener.HttpOnNextSubListener;
 import com.wzgiceman.rxretrofitlibrary.retrofit_rx.subscribers.ProgressSubscriber;
@@ -21,7 +19,6 @@ import retrofit2.adapter.rxjava.RxJavaCallAdapterFactory;
 import retrofit2.converter.scalars.ScalarsConverterFactory;
 import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
-import rx.functions.Func1;
 import rx.schedulers.Schedulers;
 
 /**
@@ -67,7 +64,7 @@ public class HttpManager {
                 /*失败后的retry配置*/
                 .retryWhen(new RetryWhenNetworkException())
                 /*异常处理*/
-                .onErrorResumeNext(funcException)
+                .onErrorResumeNext(new ExceptionFunc())
                 /*生命周期管理*/
                 //.compose(appCompatActivity.get().bindToLifecycle())
                 //Note:手动设置在activity onDestroy的时候取消订阅
@@ -75,33 +72,8 @@ public class HttpManager {
                 /*http请求线程*/
                 .subscribeOn(Schedulers.io())
                 .unsubscribeOn(Schedulers.io())
-                .flatMap(new Func1() {
-                    @Override
-                    public Observable call(Object o) {
-                        /*这里是判断错误tokean之类过期的错误，假设所有接口全部失败*/
-                        /*这里简单的以tokean为空来判断，实际运用中需要通过服务器错误标示来判断启用tokean机制*/
-                        if (basePar.getTokean() == null || "".equals(basePar.getTokean())) {
-                            return basePar.getObservableTokean(retrofit)
-                                    .flatMap(new Func1() {
-                                        @Override
-                                        public Observable call(Object o) {
-                                        /*成功返回tokean数据*/
-                                            if (o instanceof String) {
-                                            /*解析出tokean传入到当前请求的api接口类中*/
-                                                String tokean = "aaaa";
-                                                Log.e("tag", "tokean获取成功");
-                                                basePar.setTokean(tokean);
-                                                /*继续当前接口请求*/
-                                                return basePar.getObservable(retrofit);
-                                            }
-                                            throw new HttpTimeException("获取tokean失败");
-                                        }
-                                    });
-                        }
-                        Log.e("tag", "正常处理");
-                        return Observable.just(o);
-                    }
-                })
+                /*tokean统一失效处理*/
+                .flatMap(new TokeanFunc(basePar, retrofit))
                 /*回调线程*/
                 .observeOn(AndroidSchedulers.mainThread());
 
@@ -117,17 +89,4 @@ public class HttpManager {
         }
 
     }
-
-
-    /**
-     * 异常处理
-     */
-    Func1 funcException = new Func1<Throwable, Observable>() {
-        @Override
-        public Observable call(Throwable throwable) {
-            return Observable.error(FactoryException.analysisExcetpion(throwable));
-        }
-    };
-
-
 }
