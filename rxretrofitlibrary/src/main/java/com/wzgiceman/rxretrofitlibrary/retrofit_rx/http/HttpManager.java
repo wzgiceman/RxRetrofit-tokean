@@ -77,7 +77,7 @@ public class HttpManager {
                 .unsubscribeOn(Schedulers.io())
                 .flatMap(new Func1() {
                     @Override
-                    public Object call(Object o) {
+                    public Observable call(Object o) {
                         /*这里是判断错误tokean之类过期的错误，假设所有接口全部失败*/
                         /*这里简单的以tokean为空来判断*/
                         if (basePar.getTokean() == null || "".equals(basePar.getTokean())) {
