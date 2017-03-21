@@ -79,7 +79,7 @@ public class HttpManager {
                     @Override
                     public Observable call(Object o) {
                         /*这里是判断错误tokean之类过期的错误，假设所有接口全部失败*/
-                        /*这里简单的以tokean为空来判断*/
+                        /*这里简单的以tokean为空来判断，实际运用中需要通过服务器错误标示来判断启用tokean机制*/
                         if (basePar.getTokean() == null || "".equals(basePar.getTokean())) {
                             return basePar.getObservableTokean(retrofit)
                                     .flatMap(new Func1() {
@@ -91,13 +91,14 @@ public class HttpManager {
                                                 String tokean = "aaaa";
                                                 Log.e("tag", "tokean获取成功");
                                                 basePar.setTokean(tokean);
+                                                /*继续当前接口请求*/
                                                 return basePar.getObservable(retrofit);
                                             }
                                             throw new HttpTimeException("获取tokean失败");
                                         }
                                     });
                         }
-                        Log.e("tag","正常处理");
+                        Log.e("tag", "正常处理");
                         return Observable.just(o);
                     }
                 })
@@ -105,12 +106,12 @@ public class HttpManager {
                 .observeOn(AndroidSchedulers.mainThread());
 
         /*ober回调，链接式返回*/
-        if (onNextSubListener!=null&&null != onNextSubListener.get()) {
+        if (onNextSubListener != null && null != onNextSubListener.get()) {
             onNextSubListener.get().onNext(observable, basePar.getMethod());
         }
 
         /*数据String回调*/
-        if (onNextListener!=null&&null != onNextListener.get()) {
+        if (onNextListener != null && null != onNextListener.get()) {
             ProgressSubscriber subscriber = new ProgressSubscriber(basePar, onNextListener, appCompatActivity);
             observable.subscribe(subscriber);
         }
