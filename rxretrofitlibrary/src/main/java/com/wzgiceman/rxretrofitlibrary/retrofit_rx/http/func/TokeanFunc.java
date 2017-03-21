@@ -32,13 +32,13 @@ public class TokeanFunc implements Func1<Object, Observable> {
                     .flatMap(new Func1() {
                         @Override
                         public Observable call(Object o) {
-                                        /*成功返回tokean数据*/
+                            /*成功返回tokean数据*/
                             if (o instanceof String) {
-                                            /*解析出tokean传入到当前请求的api接口类中*/
+                                /*解析出tokean传入到当前请求的api接口类中*/
                                 String tokean = "aaaa";
                                 Log.e("tag", "tokean获取成功");
                                 basePar.setTokean(tokean);
-                                                /*继续当前接口请求*/
+                                /*继续当前接口请求*/
                                 return basePar.getObservable(retrofit);
                             }
                             throw new HttpTimeException("获取tokean失败");

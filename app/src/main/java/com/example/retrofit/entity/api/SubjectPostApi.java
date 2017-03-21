@@ -44,7 +44,7 @@ public class SubjectPostApi extends BaseApi {
     @Override
     public Observable getObservable(Retrofit retrofit) {
         HttpPostService httpService = retrofit.create(HttpPostService.class);
-        /*后台输出tokean变化*/
+        /*后台输出tokean变化-这里可以给tokean做任何处理：比如加密===*/
         Log.e("tag","--->"+getTokean());
         return httpService.getAllVedioBy(isAll(),getTokean());
     }
