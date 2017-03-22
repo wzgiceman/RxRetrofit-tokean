@@ -44,8 +44,9 @@ public class TokeanFunc implements Func1<Object, Observable> {
                             throw new HttpTimeException("获取tokean失败");
                         }
                     });
+        } else {
+            Log.e("tag", "正常处理");
+            return Observable.just(o);
         }
-        Log.e("tag", "正常处理");
-        return Observable.just(o);
     }
 }
